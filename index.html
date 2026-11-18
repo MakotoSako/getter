@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>五星三心占い 総合診断＆相性占い</title>
+  <style>
+    :root {
+      --primary: #333842;       /* チャコールグレー */
+      --silver: #7d8590;        /* メタリックシルバー */
+      --silver-light: #c8cfd8;  /* ライトシルバー */
+      --love: #5c6675;          /* クールスレート（相性タブ用） */
+      --bg-start: #e6e9ef;
+      --bg-end: #cfd5df;
+      --card: #ffffff;
+      --text: #22262e;
+    }
+    body {
+      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+      background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      margin: 0;
+      padding: 24px 14px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff 0%, #f5f7fa 100%);
+      max-width: 520px;
+      width: 100%;
+      padding: 32px 24px;
+      border-radius: 18px;
+      border: 2px solid var(--silver-light);
+      box-shadow: 0 14px 36px rgba(30, 36, 48, 0.14);
+      box-sizing: border-box;
+    }
+    /* 内側のシルバー装飾フレーム */
+    .container::before {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border: 1px solid rgba(125, 133, 144, 0.35);
+      border-radius: 12px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    /* 背景に薄く浮かぶ「キャップ＆仮面」の透かし装飾 */
+    .bg-watermark {
+      position: absolute;
+      right: -25px;
+      bottom: -15px;
+      width: 310px;
+      height: 360px;
+      opacity: 0.085;
+      pointer-events: none;
+      z-index: 0;
+      /* ※お手元の画像ファイル（例: mask.png）をそのまま使いたい場合は、
+         HTML内の<svg>を消して、下の2行のコメントを外してください */
+      /* background: url('mask.png') no-repeat right bottom / contain; */
+      /* filter: grayscale(100%); */
+    }
+    .content-layer {
+      position: relative;
+      z-index: 1;
+    }
+    /* タイトル装飾 */
+    .header-ornament {
+      text-align: center;
+      color: var(--silver);
+      font-size: 0.85rem;
+      letter-spacing: 0.35em;
+      margin-bottom: 4px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin: 0 0 6px 0;
+      background: linear-gradient(135deg, #1f2329 0%, #5a6270 50%, #1f2329 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 0.05em;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #666d78;
+      margin-bottom: 22px;
+    }
+    /* タブ切り替え */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+      background: linear-gradient(180deg, #e2e6ed, #ebeff5);
+      padding: 5px;
+      border-radius: 10px;
+      border: 1px solid #d0d6e0;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: transparent;
+      color: #636b78;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: linear-gradient(180deg, #ffffff, #f2f4f8);
+      color: #1f2329;
+      box-shadow: 0 2px 6px rgba(30, 36, 48, 0.12);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .input-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      color: #3d434d;
+    }
+    input[type="date"] {
+      width: 100%;
+      padding: 11px 12px;
+      font-size: 1rem;
+      border: 2px solid #cfd5df;
+      border-radius: 8px;
+      box-sizing: border-box;
+      background-color: rgba(255, 255, 255, 0.92);
+      color: #22262e;
+    }
+    input[type="date"]:focus {
+      outline: none;
+      border-color: var(--silver);
+    }
+    /* メタリックシルバー＆チャコールのグラデーションボタン */
+    .action-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: #ffffff;
+      background: linear-gradient(135deg, #4b525e 0%, #272b33 50%, #3d434f 100%);
+      border: 1px solid #1e2229;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(35, 40, 50, 0.25);
+      transition: transform 0.15s, opacity 0.2s;
+    }
+    .action-btn.love-btn {
+      background: linear-gradient(135deg, #687282 0%, #3a404c 50%, #525a68 100%);
+      border-color: #2f343e;
+    }
+    .action-btn:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+    .result-area {
+      display: none;
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 2px dashed #cfd5df;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* プラチナシルバーのタイプバッジ */
+    .type-badge {
+      position: relative;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(226,231,239,0.95) 50%, rgba(242,245,249,0.95) 100%);
+      border: 2px solid #b8c0cc;
+      border-radius: 12px;
+      padding: 18px 14px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 12px rgba(60, 70, 85, 0.1);
+    }
+    .type-label {
+      font-size: 0.82rem;
+      color: #555e6b;
+      font-weight: bold;
+    }
+    .type-name {
+      font-size: 1.7rem;
+      font-weight: bold;
+      color: #1b1f26;
+      margin: 4px 0 6px 0;
+    }
+    .meisu-tag {
+      display: inline-block;
+      background: linear-gradient(135deg, #7d8694, #49505c);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: bold;
+      padding: 3px 12px;
+      border-radius: 999px;
+    }
+    /* 各項目のボックスもグレートーンのグラデーションで統一 */
+    .info-box {
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,246,250,0.92));
+      backdrop-filter: blur(2px);
+      border: 1px solid #dce1e8;
+      border-left: 4px solid #3c424d;
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 14px;
+      line-height: 1.65;
+      font-size: 0.92rem;
+    }
+    .info-box h3 {
+      margin: 0 0 6px 0;
+      font-size: 0.98rem;
+      color: #2b303a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .info-box.silver-2 { border-left-color: #5d6675; }
+    .info-box.silver-2 h3 { color: #3e4552; }
+    .info-box.silver-3 { border-left-color: #7d8694; }
+    .info-box.silver-3 h3 { color: #4c5461; }
+    .info-box.silver-4 { border-left-color: #9ba3b0; }
+    .info-box.silver-4 h3 { color: #353b45; }
+
+    .badge-pill {
+      font-size: 0.74rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #e4e8ef;
+      color: #48505c;
+      font-weight: normal;
+    }
+    .lucky-tip {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #cfd5df;
+      font-size: 0.86rem;
+      color: #4c5461;
+    }
+    /* 相性結果用 */
+    .pair-cards {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .pair-card {
+      flex: 1;
+      background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(238,241,246,0.94));
+      border: 1px solid #c8cfd8;
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .pair-card .who {
+      font-size: 0.78rem;
+      color: #6c7482;
+    }
+    .pair-card .ptype {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: #1f2329;
+      margin-top: 4px;
+    }
+    .heart-icon {
+      font-size: 1.4rem;
+      color: #5c6675;
+    }
+    .score-banner {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(224,229,238,0.95) 100%);
+      border: 2px solid #aeb7c4;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .score-num {
+      font-size: 1.85rem;
+      font-weight: bold;
+      color: #272b33;
+    }
+    .footer-ornament {
+      text-align: center;
+      color: var(--silver);
+      font-size: 0.8rem;
+      letter-spacing: 0.3em;
+      margin-top: 18px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 背景の透かしイラスト（キャップ＋キラキラ仮面＋シルバーの光） -->
+  <div class="bg-watermark" aria-hidden="true">
+    <svg viewBox="0 0 320 380" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="glow" cx="30%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#8c96a6" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#8c96a6" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <!-- 背景の光（ボケ光） -->
+      <circle cx="65" cy="95" r="55" fill="url(#glow)"/>
+      <circle cx="45" cy="180" r="40" fill="url(#glow)"/>
+      <circle cx="95" cy="240" r="35" fill="url(#glow)"/>
+
+      <!-- 顔の輪郭と首・襟元 -->
+      <path d="M115,155 C112,205 128,248 158,262 C188,274 225,252 248,215 L258,285 L155,345 L145,260" fill="none" stroke="#1a1d24" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- 襟とジャケット -->
+      <path d="M135,280 L175,340 L295,275 L315,375 L105,375 Z" fill="#1a1d24"/>
+      <path d="M150,272 L182,315 L245,270" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+
+      <!-- キャップ（帽子） -->
+      <path d="M88,125 C95,55 165,22 235,45 C275,60 292,98 288,132 C240,115 155,112 88,125 Z" fill="#1a1d24"/>
+      <!-- キャップのつば -->
+      <path d="M88,125 C45,132 25,148 32,162 C65,155 125,138 195,135 C155,122 115,120 88,125 Z" fill="#111318"/>
+      <!-- キャップの艶ハイライト -->
+      <path d="M130,52 C170,38 215,45 245,68" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+
+      <!-- 仮面（ベネチアンマスク風） -->
+      <path d="M92,145 Q135,122 175,142 Q218,118 265,138 C272,165 258,195 228,198 C202,200 188,185 175,185 C162,185 148,204 122,204 C95,204 85,175 92,145 Z" fill="#1a1d24"/>
+      <!-- 目の穴 -->
+      <ellipse cx="132" cy="168" rx="22" ry="11" transform="rotate(-6 132 168)" fill="#ffffff"/>
+      <ellipse cx="222" cy="162" rx="24" ry="11" transform="rotate(-8 222 162)" fill="#ffffff"/>
+      <!-- 瞳 -->
+      <circle cx="130" cy="168" r="6" fill="#1a1d24"/>
+      <circle cx="218" cy="162" r="6" fill="#1a1d24"/>
+
+      <!-- 仮面のビジュー（キラキラ装飾） -->
+      <g fill="#ffffff">
+        <circle cx="105" cy="148" r="3"/><circle cx="122" cy="140" r="3.5"/><circle cx="145" cy="142" r="3"/>
+        <circle cx="168" cy="150" r="3.5"/><circle cx="192" cy="142" r="3"/><circle cx="218" cy="136" r="3.5"/>
+        <circle cx="245" cy="142" r="3.5"/><circle cx="258" cy="158" r="3"/><circle cx="248" cy="182" r="3"/>
+        <circle cx="225" cy="188" r="3"/><circle cx="198" cy="180" r="2.5"/><circle cx="152" cy="185" r="2.5"/>
+        <circle cx="125" cy="194" r="3"/><circle cx="102" cy="186" r="3"/><circle cx="176" cy="168" r="3"/>
+      </g>
+      <!-- 十字の輝き -->
+      <path d="M255,140 L255,152 M249,146 L261,146" stroke="#ffffff" stroke-width="2"/>
+      <path d="M112,152 L112,162 M107,157 L117,157" stroke="#ffffff" stroke-width="2"/>
+
+      <!-- 鼻筋と口元 -->
+      <path d="M168,188 L158,215 L172,220" fill="none" stroke="#1a1d24" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M155,236 Q178,242 204,232" fill="none" stroke="#1a1d24" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="content-layer">
+    <div class="header-ornament">✦ ✧ ✦ ✧ ✦</div>
+    <h1>🔮 五星三心占い 総合診断</h1>
+    <p class="subtitle">基本性格・今日＆今週の運勢・恋愛相性をチェック</p>
+
+    <!-- モード切り替えタブ -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-single" onclick="switchTab('single')">運勢・性格をみる</button>
+      <button class="tab-btn" id="tab-love" onclick="switchTab('love')">💕 恋愛相性をみる</button>
+    </div>
+
+    <!-- ① 1人診断タブ -->
+    <div id="content-single" class="tab-content active">
+      <div class="input-group">
+        <label for="birthdate">あなたの生年月日</label>
+        <input type="date" id="birthdate" min="1920-01-01">
+      </div>
+      <button class="action-btn" onclick="diagnoseSingle()">✨ あなたの運命を占う！</button>
+
+      <div id="result-single" class="result-area">
+        <div class="type-badge">
+          <div class="type-label">✦ あなたの五星三心タイプは… ✦</div>
+          <div class="type-name" id="res-type"></div>
+          <span class="meisu-tag" id="res-meisu"></span>
+        </div>
+
+        <!-- 1. 基本性格 -->
+        <div class="info-box">
+          <h3><span>✨ 基本性格</span><span class="badge-pill">本質</span></h3>
+          <div id="res-desc"></div>
+        </div>
+
+        <!-- 2. 今日の運勢 -->
+        <div class="info-box silver-2">
+          <h3><span>☀️ 今日の運勢</span><span class="badge-pill" id="today-date-label"></span></h3>
+          <div id="res-today"></div>
+          <div class="lucky-tip" id="res-today-tip"></div>
+        </div>
+
+        <!-- 3. 今週の運勢 -->
+        <div class="info-box silver-3">
+          <h3><span>📅 今週の運勢</span><span class="badge-pill">7日間の流れ</span></h3>
+          <div id="res-week"></div>
+        </div>
+
+        <!-- 4. 今年（2026年）の運気 -->
+        <div class="info-box silver-4">
+          <h3><span id="res-year-title">今年の運気</span><span class="badge-pill">12年周期</span></h3>
+          <div id="res-year"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 恋愛相性タブ -->
+    <div id="content-love" class="tab-content">
+      <div class="input-group">
+        <label for="my-birthdate">あなたの生年月日</label>
+        <input type="date" id="my-birthdate" min="1920-01-01">
+      </div>
+      <div class="input-group">
+        <label for="partner-birthdate">お相手の生年月日</label>
+        <input type="date" id="partner-birthdate" min="1920-01-01">
+      </div>
+      <button class="action-btn love-btn" onclick="diagnoseLove()">💕 2人の恋愛相性を占う！</button>
+
+      <div id="result-love" class="result-area">
+        <div class="pair-cards">
+          <div class="pair-card">
+            <div class="who">あなた</div>
+            <div class="ptype" id="love-my-type"></div>
+          </div>
+          <div class="heart-icon">💞</div>
+          <div class="pair-card">
+            <div class="who">お相手</div>
+            <div class="ptype" id="love-partner-type"></div>
+          </div>
+        </div>
+
+        <div class="score-banner">
+          <div style="font-size:0.85rem; color:#4c5461;">恋愛相性度</div>
+          <div class="score-num" id="love-score"></div>
+          <div style="font-size:0.9rem; font-weight:bold; margin-top:4px; color:#2b303a;" id="love-catch"></div>
+        </div>
+
+        <div class="info-box silver-2">
+          <h3><span>💌 2人の恋愛傾向と距離の縮め方</span></h3>
+          <div id="love-desc"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-ornament">✧ ✦ ✧</div>
+  </div>
+</div>
+
+<script>
+  // 起動時に現在の日付（YYYY-MM-DD）を各入力欄の初期値にセット
+  window.addEventListener("DOMContentLoaded", () => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    document.getElementById("birthdate").value = todayStr;
+    document.getElementById("my-birthdate").value = todayStr;
+    document.getElementById("partner-birthdate").value = todayStr;
+  });
+
+  const TYPE_LIST = [
+    "金の羅針盤座", "銀の羅針盤座", "金のインディアン座", "銀のインディアン座",
+    "金の鳳凰座", "銀の鳳凰座", "金の時計座", "銀の時計座",
+    "金のカメレオン座", "銀のカメレオン座", "金のイルカ座", "銀のイルカ座"
+  ];
+
+  const LUCK_CYCLE = [
+    { name: "開運の運気", desc: "絶好調のタイミング！迷っていたことに一歩踏み出すと大きな成果につながります。", tip: "ラッキーアクション：新しい場所へ出かける・決断をする" },
+    { name: "幸運の運気", desc: "これまでの努力が評価されやすい時期。周囲からの嬉しい誘いやサポートに恵まれます。", tip: "ラッキーアクション：感謝の言葉をいつもより多めに伝える" },
+    { name: "準備の運気", desc: "次の飛躍に向けて計画を立てたり、情報を集めたりするとスムーズに進みます。", tip: "ラッキーアクション：メモやスケジュール帳を整理する" },
+    { name: "影の運気", desc: "少しペースダウンして足元を固める時期。無理に動かず慎重な判断を心がけて。", tip: "ラッキーアクション：温かい飲み物でホッと一息つく" },
+    { name: "乱気の運気", desc: "予定変更や勘違いが起きやすいタイミング。確認作業を丁寧に行うとトラブル回避に。", tip: "ラッキーアクション：約束の時間より10分早く行動する" },
+    { name: "裏運気の運気", desc: "普段とは違う一面が出やすい時期。思い通りにならなくても「学び」と捉えると吉。", tip: "ラッキーアクション：普段選ばないメニューや道を選んでみる" },
+    { name: "整理の運気", desc: "不要なモノや悪習慣を手放すのに最適な時期。身軽になることで良い運が入ってきます。", tip: "ラッキーアクション：デスク周りやスマホの不要データを消す" },
+    { name: "チャレンジの運気", desc: "好奇心のままに行動すると面白い発見がある時期。失敗を恐れず試してみて。", tip: "ラッキーアクション：気になった本や動画をチェックする" },
+    { name: "チャレンジの運気", desc: "視野が広がり人脈も活性化するとき。普段あまり話さない人とも交流してみましょう。", tip: "ラッキーアクション：自分から挨拶や連絡をしてみる" },
+    { name: "健康管理の運気", desc: "心と体のメンテナンスを最優先に。睡眠や食事のリズムを整えると運気が安定します。", tip: "ラッキーアクション：お風呂にゆっくり浸かって早めに寝る" },
+    { name: "リフレッシュの運気", desc: "趣味や好きなことを思いきり楽しんでエネルギーを充電すると良い流れに乗れます。", tip: "ラッキーアクション：お気に入りの音楽を聴く・美味しいものを食べる" },
+    { name: "解放の運気", desc: "魅力が高まり周囲から注目されやすい時期。自信を持って自分の意見を発信して◎。", tip: "ラッキーアクション：明るい色の服や小物を身につける" }
+  ];
+
+  // タブ切り替え
+  function switchTab(mode) {
+    document.getElementById("tab-single").classList.toggle("active", mode === "single");
+    document.getElementById("tab-love").classList.toggle("active", mode === "love");
+    document.getElementById("content-single").classList.toggle("active", mode === "single");
+    document.getElementById("content-love").classList.toggle("active", mode === "love");
+  }
+
+  // 生年月日から基本データ算出
+  function getProfile(dateStr) {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const baseUtc = Date.UTC(1900, 0, 1);
+    const targetUtc = Date.UTC(year, month - 1, day);
+    const daysDiff = Math.floor((targetUtc - baseUtc) / (1000 * 60 * 60 * 24));
+    const meisu = ((daysDiff + 10) % 60 + 60) % 60 + 1;
+
+    let zodiac = "";
+    let desc = "";
+
+    if (meisu <= 10) {
+      zodiac = "羅針盤座";
+      desc = "真面目で几帳面、丁寧なサポート役。少しネガティブで受け身な一面もありますが、礼儀正しく信頼されるタイプです。";
+    } else if (meisu <= 20) {
+      zodiac = "インディアン座";
+      desc = "妄想好きでマイペース。中学生のような無邪気さと旺盛な好奇心を持ち、自由に動き回ることで輝きます。";
+    } else if (meisu <= 30) {
+      zodiac = "鳳凰座";
+      desc = "頑固で職人気質。一度決めたら曲げない強い意志と忍耐力を持ち、時間をかけて大きな成果を出します。";
+    } else if (meisu <= 40) {
+      zodiac = "時計座";
+      desc = "優しくて庶民的。人のために動くのが好きな面倒見の良い世話焼きで、周囲との調和を大切にします。";
+    } else if (meisu <= 50) {
+      zodiac = "カメレオン座";
+      desc = "学習能力が高く器用。周囲に合わせるのが上手い現実主義者で、マネや応用から才能を開花させます。";
+    } else {
+      zodiac = "イルカ座";
+      desc = "負けず嫌いで華やか。仲間思いでノリと勢いを大切にし、目標があると一気に突っ走るエネルギーを持ちます。";
+    }
+
+    const isGold = (year % 2 === 0);
+    const metal = isGold ? "金" : "銀";
+    const metalDesc = isGold
+      ? "陽気で直感的、自分のために動くエネルギーが強い表舞台タイプです。"
+      : "控えめで理屈っぽい、人のために動くエネルギーが強い裏方タイプです。";
+
+    const fullType = `${metal}の${zodiac}`;
+    const typeIndex = TYPE_LIST.indexOf(fullType);
+
+    return { year, month, day, meisu, zodiac, metal, isGold, fullType, typeIndex, desc: `${desc} ${metalDesc}` };
+  }
+
+  // ① 1人診断の実行
+  function diagnoseSingle() {
+    const input = document.getElementById("birthdate").value;
+    if (!input) return alert("生年月日を入力してください。");
+
+    const p = getProfile(input);
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    // 今年の運気（12年周期）
+    const yearIdx = ((currentYear - 2026 + (p.typeIndex - 6)) % 12 + 12) % 12;
+    const yearLuck = LUCK_CYCLE[yearIdx];
+
+    // 今日の運勢（12日周期）
+    const todayUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayDays = Math.floor((todayUtc - Date.UTC(1900, 0, 1)) / (1000 * 60 * 60 * 24));
+    const dayIdx = ((todayDays + p.typeIndex) % 12 + 12) % 12;
+    const dayLuck = LUCK_CYCLE[dayIdx];
+
+    // 今週の運勢（12週周期）
+    const weekNum = Math.floor(todayDays / 7);
+    const weekIdx = ((weekNum + p.typeIndex) % 12 + 12) % 12;
+    const weekLuck = LUCK_CYCLE[weekIdx];
+
+    document.getElementById("res-type").textContent = p.fullType;
+    document.getElementById("res-meisu").textContent = `命数：${p.meisu}番`;
+
+    // 1. 基本性格
+    document.getElementById("res-desc").textContent = p.desc;
+
+    // 2. 今日の運勢
+    document.getElementById("today-date-label").textContent = `${now.getMonth() + 1}月${now.getDate()}日`;
+    document.getElementById("res-today").innerHTML = `<strong>【${dayLuck.name}】</strong> ${dayLuck.desc}`;
+    document.getElementById("res-today-tip").textContent = dayLuck.tip;
+
+    // 3. 今週の運勢
+    document.getElementById("res-week").innerHTML = `<strong>【${weekLuck.name}】</strong> 今週は「${weekLuck.name.replace("の運気","")}」のムードが流れる1週間。${weekLuck.desc}`;
+
+    // 4. 今年（2026年）の運気
+    document.getElementById("res-year-title").textContent = `🌟 今年（${currentYear}年）の運気`;
+    document.getElementById("res-year").innerHTML = `<strong>【${yearLuck.name.replace("の運気","の年")}】</strong> ${yearLuck.desc}`;
+
+    document.getElementById("result-single").style.display = "block";
+  }
+
+  // ② 恋愛相性診断の実行
+  function diagnoseLove() {
+    const myInput = document.getElementById("my-birthdate").value;
+    const partnerInput = document.getElementById("partner-birthdate").value;
+    if (!myInput || !partnerInput) return alert("2人分の生年月日を入力してください。");
+
+    const me = getProfile(myInput);
+    const partner = getProfile(partnerInput);
+
+    const diff = ((partner.typeIndex - me.typeIndex) % 12 + 12) % 12;
+    const oppositeMetal = (me.isGold !== partner.isGold);
+
+    let score = 75;
+    let catchCopy = "";
+    let advice = "";
+
+    if (me.fullType === partner.fullType) {
+      score = 88;
+      catchCopy = "価値観が瓜二つ！安心感バツグンの鏡のような関係";
+      advice = `同じ「${me.fullType}」同士なので、言葉にしなくても考えていることやツボが分かり合える相性です。似た者同士ゆえに弱点も重なりやすいので、意見がぶつかったときはどちらかが一歩譲ると長続きします。`;
+    } else if (diff === 6) {
+      score = 92;
+      catchCopy = "自分にない魅力に惹かれ合う！運命の補完カップル";
+      advice = `「${me.fullType}」と「${partner.fullType}」は、お互いの裏側の性質を持ち合わせる特別な相性です。最初は考え方の違いに驚くこともありますが、一緒にいることで視野が広がり、最強のパートナーになれます。`;
+    } else if (oppositeMetal && (diff === 1 || diff === 11 || diff === 5 || diff === 7)) {
+      score = 95;
+      catchCopy = "自然と支え合える！理想のベストパートナー相性";
+      advice = `${me.metal}の積極性と${partner.metal}のサポート力が噛み合う好相性！無理に背伸びをしなくても自然な役割分担ができ、一緒に過ごすほど居心地の良さと信頼が深まっていきます。`;
+    } else if (diff === 2 || diff === 10 || diff === 4 || diff === 8) {
+      score = 84;
+      catchCopy = "会話が弾む！友達のように楽しく過ごせる相性";
+      advice = `テンポやノリが合いやすく、一緒にいて笑顔が増える明るい相性です。共通の趣味や美味しい食事を楽しむ時間を増やすことで、恋愛感情がグッと高まります。`;
+    } else {
+      score = 78;
+      catchCopy = "新鮮な刺激を与え合える！成長できる相性";
+      advice = `行動パターンが少し異なる2人だからこそ、相手の長所を素直に尊敬できる関係です。「こうしてほしい」は察してもらうのを待つより、言葉で優しく伝えると驚くほどスムーズに愛が深まります。`;
+    }
+
+    document.getElementById("love-my-type").textContent = me.fullType;
+    document.getElementById("love-partner-type").textContent = partner.fullType;
+    document.getElementById("love-score").textContent = `${score}%`;
+    document.getElementById("love-catch").textContent = catchCopy;
+    document.getElementById("love-desc").textContent = advice;
+
+    document.getElementById("result-love").style.display = "block";
+  }
+</script>
+
+</body>
+</html>
